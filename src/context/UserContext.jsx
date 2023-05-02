@@ -1,27 +1,43 @@
 import { createContext, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 
 export const UserContext = createContext();
 
 export const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const login = async (email, password) => {
-    // Log the user in, update the state and navigate
+    try {
+      const response = await authService.login(email, password);
+      setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      navigate("/tasks");
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
   };
 
   const logout = () => {
-    // Log the user out, update the state and navigate
+    setUser(null);
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   const signup = async (email, password, username) => {
-    // Sign the user up, update the state and navigate
+    try {
+      const response = await authService.signup(email, password, username);
+      setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      navigate("/tasks");
+    } catch (error) {
+      console.error("Error signing up:", error);
+    }
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, signup }}>
+    <UserContext.Provider value={{ user, setUser, login, logout, signup }}>
       {children}
     </UserContext.Provider>
   );
