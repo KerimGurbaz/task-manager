@@ -1,29 +1,59 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
+import { UserContext } from "./UserContext";
 import api from "../services/api";
 
 export const TaskContext = createContext();
 
 export const TaskContextProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     // Fetch tasks from the API
   }, []);
 
   const getTasks = async () => {
-    // Fetch tasks and update the state
+    try {
+      const response = await api.get("/tasks", {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
   };
 
   const createTask = async (task) => {
-    // Create a new task and update the state
+    try {
+      const response = await api.post("/tasks", task, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      setTasks([...tasks, response.data]);
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
   };
 
   const updateTask = async (id, updatedTask) => {
-    // Update an existing task and update the state
+    try {
+      const response = await api.put(`/tasks/${id}`, updatedTask, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      setTasks(tasks.map((task) => (task.id === id ? response.data : task)));
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
   };
 
   const deleteTask = async (id) => {
-    // Delete a task and update the state
+    try {
+      await api.delete(`/tasks/${id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      setTasks(tasks.filter((task) => task.id !== id));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   return (
